@@ -26,15 +26,11 @@ program yao
     t = 2000.0_dp
     t_jd_j2000 = (t-2000.0_dp)*365.25_dp-0.5_dp
     call iau_ATCI13(a_icrs_ra, a_icrs_dec, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, & 
-                    2451545_dp, t_jd_j2000, a_cirs_ra, a_cirs_dec, EO)
+                    2451545.0_dp, t_jd_j2000, a_cirs_ra, a_cirs_dec, EO)
     call iau_ATCI13(b_icrs_ra, b_icrs_dec, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, & 
-                    2451545_dp, t_jd_j2000, b_cirs_ra, b_cirs_dec, EO)
+                    2451545.0_dp, t_jd_j2000, b_cirs_ra, b_cirs_dec, EO)
     call iau_ATCI13(c_icrs_ra, c_icrs_dec, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, & 
-                    2451545_dp, t_jd_j2000, c_cirs_ra, c_cirs_dec, EO)
+                    2451545.0_dp, t_jd_j2000, c_cirs_ra, c_cirs_dec, EO)
     call iau_ATCI13(d_icrs_ra, d_icrs_dec, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, & 
-                    2451545_dp, t_jd_j2000, d_cirs_ra, d_cirs_dec, EO)
-    print *, a_icrs_ra, b_icrs_ra, c_icrs_ra, d_icrs_ra
-    print *, a_icrs_dec, b_icrs_dec, c_icrs_dec, d_icrs_dec
-    print *, a_cirs_ra, b_cirs_ra, c_cirs_ra, d_cirs_ra
-    print *, a_cirs_dec, b_cirs_dec, c_cirs_dec, d_cirs_dec
+                    2451545.0_dp, t_jd_j2000, d_cirs_ra, d_cirs_dec, EO)
 end program yao
