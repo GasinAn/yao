@@ -41,6 +41,8 @@ program yao
                     2451545.0_dp, t_jd_j2000, c_cirs_ra, c_cirs_dec, EO)
     call iau_ATCI13(d_icrs_ra, d_icrs_dec, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, & 
                     2451545.0_dp, t_jd_j2000, d_cirs_ra, d_cirs_dec, EO)
+    print *, a_cirs_ra, b_cirs_ra, c_cirs_ra, d_cirs_ra
+    print *, a_cirs_dec, b_cirs_dec, c_cirs_dec, d_cirs_dec
     sa_ra = 00.0_dp*(pi/12.0_dp)
     sb_ra = 06.0_dp*(pi/12.0_dp)
     sc_ra = 12.0_dp*(pi/12.0_dp)

@@ -21,7 +21,3 @@ SC = SkyCoord('12 00 00 00 00 00', obstime=t, frame='geocentrictrueecliptic',
               unit=(hourangle, degree), equinox='J2000')
 SD = SkyCoord('18 00 00 00 00 00', obstime=t, frame='geocentrictrueecliptic',
               unit=(hourangle, degree), equinox='J2000')
-print(SA.cirs.ra.to(rad),SB.cirs.ra.to(rad),
-      SC.cirs.ra.to(rad),SD.cirs.ra.to(rad))
-print(SA.cirs.dec.to(rad),SB.cirs.dec.to(rad),
-      SC.cirs.dec.to(rad),SD.cirs.dec.to(rad))
