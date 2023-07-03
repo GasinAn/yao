@@ -1,3 +1,4 @@
+from astropy.units import rad
 from astropy.units import hourangle, degree
 from astropy.time import Time
 from astropy.coordinates import SkyCoord
@@ -12,3 +13,15 @@ C = SkyCoord('21 31 33.5317148 -05 34 16.232006', obstime=t,  frame='gcrs',
              unit=(hourangle, degree), equinox='J2000')
 D = SkyCoord('03 46 24.2 +24 06 50', obstime=t,  frame='gcrs',
              unit=(hourangle, degree), equinox='J2000')
+SA = SkyCoord('00 00 00 00 00 00', obstime=t, frame='geocentrictrueecliptic',
+              unit=(hourangle, degree), equinox='J2000')
+SB = SkyCoord('06 00 00 00 00 00', obstime=t, frame='geocentrictrueecliptic',
+              unit=(hourangle, degree), equinox='J2000')
+SC = SkyCoord('12 00 00 00 00 00', obstime=t, frame='geocentrictrueecliptic',
+              unit=(hourangle, degree), equinox='J2000')
+SD = SkyCoord('18 00 00 00 00 00', obstime=t, frame='geocentrictrueecliptic',
+              unit=(hourangle, degree), equinox='J2000')
+print(SA.cirs.ra.to(rad),SB.cirs.ra.to(rad),
+      SC.cirs.ra.to(rad),SD.cirs.ra.to(rad))
+print(SA.cirs.dec.to(rad),SB.cirs.dec.to(rad),
+      SC.cirs.dec.to(rad),SD.cirs.dec.to(rad))
