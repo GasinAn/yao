@@ -11,7 +11,7 @@ subroutine icrs2cirs(t, ra_icrs, dec_icrs, ra_cirs, dec_cirs)
     ra_icrs_rad = ra_icrs/12.0_dp*pi
     dec_icrs_rad = dec_icrs/180.0_dp*pi
     call iau_ATCI13(ra_icrs_rad, dec_icrs_rad, &
-                    0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, & 
+                    0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
                     2451545.0_dp, t_jd_j2000, ra_cirs, dec_cirs, EO)
 end subroutine icrs2cirs
 
@@ -31,7 +31,7 @@ subroutine ecli2cirs(t, ra_ecli, dec_ecli, ra_cirs, dec_cirs)
     call iau_ECEQ06(2451545.0_dp, t_jd_j2000, ra_ecli_rad, dec_ecli_rad, &
                     ra_icrs_rad, dec_icrs_rad)
     call iau_ATCI13(ra_icrs_rad, dec_icrs_rad, &
-                    0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, & 
+                    0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
                     2451545.0_dp, t_jd_j2000, ra_cirs, dec_cirs, EO)
 end subroutine ecli2cirs
 
@@ -53,17 +53,35 @@ subroutine ecli2cirs_lt(t, ra_ecli, dec_ecli, ra_cirs, dec_cirs)
     call iau_LTECEQ(t_jep, ra_ecli_rad, dec_ecli_rad, &
                     ra_icrs_rad, dec_icrs_rad)
     call iau_ATCI13(ra_icrs_rad, dec_icrs_rad, &
-                    0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, & 
+                    0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
                     2451545.0_dp, t_jd_j2000, ra_cirs, dec_cirs, EO)
 end subroutine ecli2cirs_lt
+
+subroutine alt(theta_2, theta_3, sa_ra, sa_dec, a_ra, a_dec, theta_a)
+    use iso_fortran_env, only: dp => real64
+    implicit none
+    real(dp),intent(in) :: theta_2, theta_3
+    real(dp),intent(in) :: sa_ra, sa_dec
+    real(dp),intent(in) :: a_ra, a_dec
+    real(dp),intent(out) :: theta_a
+    real(dp),parameter :: pi = acos(-1.0_dp)
+    real(dp) :: theta_1
+    real(dp) :: x, y
+    theta_1 = sa_ra &
+             -acos((sin(theta_3)-sin(sa_dec)*sin(theta_2)) &
+                  /(cos(sa_dec)*cos(theta_2)))
+    x = cos(a_dec)*cos(a_ra-theta_1)*sin(theta_2) &
+       -sin(a_dec)*cos(theta_2)
+    y = cos(a_dec)*sin(a_ra-theta_1)
+    theta_a = atan2(y, x)/180.0_dp*pi
+end subroutine alt
 
 program yao
     use iso_fortran_env, only: dp => real64
     implicit none
     real(dp),parameter :: pi = acos(-1.0_dp)
     real(dp) :: t
-    real(dp) :: theta_1, theta_2, theta_3
-    real(dp) :: x, y
+    real(dp) :: theta_2, theta_3
     real(dp) :: a_icrs_ra, b_icrs_ra, c_icrs_ra, d_icrs_ra
     real(dp) :: a_icrs_dec, b_icrs_dec, c_icrs_dec, d_icrs_dec
     real(dp) :: a_cirs_ra, b_cirs_ra, c_cirs_ra, d_cirs_ra
@@ -72,6 +90,8 @@ program yao
     real(dp) :: sa_dec, sb_dec, sc_dec, sd_dec
     real(dp) :: sa_cirs_ra, sb_cirs_ra, sc_cirs_ra, sd_cirs_ra
     real(dp) :: sa_cirs_dec, sb_cirs_dec, sc_cirs_dec, sd_cirs_dec
+    real(dp) :: theta_a, theta_b, theta_c, theta_d
+    t = 2000.0_dp
     a_icrs_ra = 09.0_dp+27.0_dp/60.0_dp+35.24270/3600.0_dp
     b_icrs_ra = 16.0_dp+29.0_dp/60.0_dp+24.45970/3600.0_dp
     c_icrs_ra = 21.0_dp+31.0_dp/60.0_dp+33.5317148/3600.0_dp
@@ -80,7 +100,6 @@ program yao
     b_icrs_dec = -(26.0_dp+25.0_dp/60.0_dp+55.2094/3600.0_dp)
     c_icrs_dec = -(05.0_dp+34.0_dp/60.0_dp+16.232006/3600.0_dp)
     d_icrs_dec = +(24.0_dp+06.0_dp/60.0_dp+50.0/3600.0_dp)
-    t = 2000.0_dp
     call icrs2cirs(t, a_icrs_ra, a_icrs_dec, a_cirs_ra, a_cirs_dec)
     call icrs2cirs(t, b_icrs_ra, b_icrs_dec, b_cirs_ra, b_cirs_dec)
     call icrs2cirs(t, c_icrs_ra, c_icrs_dec, c_cirs_ra, c_cirs_dec)
@@ -107,35 +126,15 @@ program yao
     call ecli2cirs(t, sd_ra, sd_dec, sd_cirs_ra, sd_cirs_dec)
     print *, sa_cirs_ra, sb_cirs_ra, sc_cirs_ra, sd_cirs_ra
     print *, sa_cirs_dec, sb_cirs_dec, sc_cirs_dec, sd_cirs_dec
-
-    theta_2 = +30.0_dp*(pi/18.0_dp)
-    theta_3 = -15.0_dp*(pi/18.0_dp)
-    theta_1 = sa_cirs_ra &
-             -acos((sin(theta_3)-sin(sa_cirs_dec)*sin(theta_2)) &
-                  /(cos(sa_cirs_dec)*cos(theta_2)))
-    x = cos(a_cirs_dec)*cos(a_cirs_ra-theta_1)*sin(theta_2) &
-       -sin(a_cirs_dec)*cos(theta_2)
-    y = cos(a_cirs_dec)*sin(a_cirs_ra-theta_1)
-    print *, atan2(y, x)/180.0_dp*pi
-    theta_1 = sb_cirs_ra &
-             -acos((sin(theta_3)-sin(sb_cirs_dec)*sin(theta_2)) &
-                  /(cos(sb_cirs_dec)*cos(theta_2)))
-    x = cos(b_cirs_dec)*cos(b_cirs_ra-theta_1)*sin(theta_2) &
-       -sin(b_cirs_dec)*cos(theta_2)
-    y = cos(b_cirs_dec)*sin(b_cirs_ra-theta_1)
-    print *, atan2(y, x)/180.0_dp*pi
-    theta_1 = sc_cirs_ra &
-             -acos((sin(theta_3)-sin(sc_cirs_dec)*sin(theta_2)) &
-                  /(cos(sc_cirs_dec)*cos(theta_2)))
-    x = cos(c_cirs_dec)*cos(c_cirs_ra-theta_1)*sin(theta_2) &
-       -sin(c_cirs_dec)*cos(theta_2)
-    y = cos(c_cirs_dec)*sin(c_cirs_ra-theta_1)
-    print *, atan2(y, x)/180.0_dp*pi
-    theta_1 = sd_cirs_ra &
-             -acos((sin(theta_3)-sin(sd_cirs_dec)*sin(theta_2)) &
-                  /(cos(sd_cirs_dec)*cos(theta_2)))
-    x = cos(d_cirs_dec)*cos(d_cirs_ra-theta_1)*sin(theta_2) &
-       -sin(d_cirs_dec)*cos(theta_2)
-    y = cos(d_cirs_dec)*sin(d_cirs_ra-theta_1)
-    print *, atan2(y, x)/180.0_dp*pi
+    theta_2 = +30.0_dp/180.0_dp*pi
+    theta_3 = -15.0_dp/180.0_dp*pi
+    call alt(theta_2, theta_3, sa_cirs_ra, sa_cirs_dec, &
+             a_cirs_ra, a_cirs_dec, theta_a)
+    call alt(theta_2, theta_3, sb_cirs_ra, sb_cirs_dec, &
+             b_cirs_ra, b_cirs_dec, theta_b)
+    call alt(theta_2, theta_3, sc_cirs_ra, sc_cirs_dec, &
+             c_cirs_ra, c_cirs_dec, theta_c)
+    call alt(theta_2, theta_3, sd_cirs_ra, sd_cirs_dec, &
+             d_cirs_ra, d_cirs_dec, theta_d)
+    print *, theta_a, theta_b, theta_c, theta_d
 end program yao
