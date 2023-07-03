@@ -1,17 +1,75 @@
+subroutine icrs2cirs(t, ra_icrs, dec_icrs, ra_cirs, dec_cirs)
+    use iso_fortran_env, only: dp => real64
+    implicit none
+    real(dp),intent(in) :: t
+    real(dp),intent(in) :: ra_icrs, dec_icrs
+    real(dp),intent(out) :: ra_cirs, dec_cirs
+    real(dp),parameter :: pi = acos(-1.0_dp)
+    real(dp) :: t_jd_j2000, EO
+    real(dp) :: ra_icrs_rad, dec_icrs_rad
+    t_jd_j2000 = (t-2000.0_dp)*365.25_dp-0.5_dp
+    ra_icrs_rad = ra_icrs/12.0_dp*pi
+    dec_icrs_rad = dec_icrs/180.0_dp*pi
+    call iau_ATCI13(ra_icrs_rad, dec_icrs_rad, &
+                    0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, & 
+                    2451545.0_dp, t_jd_j2000, ra_cirs, dec_cirs, EO)
+end subroutine icrs2cirs
+
+subroutine ecli2cirs(t, ra_ecli, dec_ecli, ra_cirs, dec_cirs)
+    use iso_fortran_env, only: dp => real64
+    implicit none
+    real(dp),intent(in) :: t
+    real(dp),intent(in) :: ra_ecli, dec_ecli
+    real(dp),intent(out) :: ra_cirs, dec_cirs
+    real(dp),parameter :: pi = acos(-1.0_dp)
+    real(dp) :: t_jd_j2000, EO
+    real(dp) :: ra_ecli_rad, dec_ecli_rad
+    real(dp) :: ra_icrs_rad, dec_icrs_rad
+    t_jd_j2000 = (t-2000.0_dp)*365.25_dp-0.5_dp
+    ra_ecli_rad = ra_ecli/12.0_dp*pi
+    dec_ecli_rad = dec_ecli/180.0_dp*pi
+    call iau_ECEQ06(2451545.0_dp, t_jd_j2000, ra_ecli_rad, dec_ecli_rad, &
+                    ra_icrs_rad, dec_icrs_rad)
+    call iau_ATCI13(ra_icrs_rad, dec_icrs_rad, &
+                    0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, & 
+                    2451545.0_dp, t_jd_j2000, ra_cirs, dec_cirs, EO)
+end subroutine ecli2cirs
+
+subroutine ecli2cirs_lt(t, ra_ecli, dec_ecli, ra_cirs, dec_cirs)
+    use iso_fortran_env, only: dp => real64
+    implicit none
+    real(dp),intent(in) :: t
+    real(dp),intent(in) :: ra_ecli, dec_ecli
+    real(dp),intent(out) :: ra_cirs, dec_cirs
+    double precision :: iau_EPJ
+    real(dp),parameter :: pi = acos(-1.0_dp)
+    real(dp) :: t_jd_j2000, t_jep, EO
+    real(dp) :: ra_ecli_rad, dec_ecli_rad
+    real(dp) :: ra_icrs_rad, dec_icrs_rad
+    t_jd_j2000 = (t-2000.0_dp)*365.25_dp-0.5_dp
+    t_jep = iau_EPJ(2451545.0_dp, t_jd_j2000)
+    ra_ecli_rad = ra_ecli/12.0_dp*pi
+    dec_ecli_rad = dec_ecli/180.0_dp*pi
+    call iau_LTECEQ(t_jep, ra_ecli_rad, dec_ecli_rad, &
+                    ra_icrs_rad, dec_icrs_rad)
+    call iau_ATCI13(ra_icrs_rad, dec_icrs_rad, &
+                    0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, & 
+                    2451545.0_dp, t_jd_j2000, ra_cirs, dec_cirs, EO)
+end subroutine ecli2cirs_lt
+
 program yao
     use iso_fortran_env, only: dp => real64
     implicit none
-    double precision :: iau_EPJ
     real(dp),parameter :: pi = acos(-1.0_dp)
-    real(dp) :: t, t_jd_j2000, t_jep, EO
+    real(dp) :: t
+    real(dp) :: theta_1, theta_2, theta_3
+    real(dp) :: x, y
     real(dp) :: a_icrs_ra, b_icrs_ra, c_icrs_ra, d_icrs_ra
     real(dp) :: a_icrs_dec, b_icrs_dec, c_icrs_dec, d_icrs_dec
     real(dp) :: a_cirs_ra, b_cirs_ra, c_cirs_ra, d_cirs_ra
     real(dp) :: a_cirs_dec, b_cirs_dec, c_cirs_dec, d_cirs_dec
     real(dp) :: sa_ra, sb_ra, sc_ra, sd_ra
     real(dp) :: sa_dec, sb_dec, sc_dec, sd_dec
-    real(dp) :: sa_icrs_ra, sb_icrs_ra, sc_icrs_ra, sd_icrs_ra
-    real(dp) :: sa_icrs_dec, sb_icrs_dec, sc_icrs_dec, sd_icrs_dec
     real(dp) :: sa_cirs_ra, sb_cirs_ra, sc_cirs_ra, sd_cirs_ra
     real(dp) :: sa_cirs_dec, sb_cirs_dec, sc_cirs_dec, sd_cirs_dec
     a_icrs_ra = 09.0_dp+27.0_dp/60.0_dp+35.24270/3600.0_dp
@@ -22,69 +80,62 @@ program yao
     b_icrs_dec = -(26.0_dp+25.0_dp/60.0_dp+55.2094/3600.0_dp)
     c_icrs_dec = -(05.0_dp+34.0_dp/60.0_dp+16.232006/3600.0_dp)
     d_icrs_dec = +(24.0_dp+06.0_dp/60.0_dp+50.0/3600.0_dp)
-    a_icrs_ra = a_icrs_ra*(pi/12.0_dp)
-    b_icrs_ra = b_icrs_ra*(pi/12.0_dp)
-    c_icrs_ra = c_icrs_ra*(pi/12.0_dp)
-    d_icrs_ra = d_icrs_ra*(pi/12.0_dp)
-    a_icrs_dec = a_icrs_dec*(pi/180.0_dp)
-    b_icrs_dec = b_icrs_dec*(pi/180.0_dp)
-    c_icrs_dec = c_icrs_dec*(pi/180.0_dp)
-    d_icrs_dec = d_icrs_dec*(pi/180.0_dp)
     t = 2000.0_dp
-    t_jd_j2000 = (t-2000.0_dp)*365.25_dp-0.5_dp
-    t_jep = iau_EPJ(2451545.0_dp, t_jd_j2000)
-    call iau_ATCI13(a_icrs_ra, a_icrs_dec, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, & 
-                    2451545.0_dp, t_jd_j2000, a_cirs_ra, a_cirs_dec, EO)
-    call iau_ATCI13(b_icrs_ra, b_icrs_dec, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, & 
-                    2451545.0_dp, t_jd_j2000, b_cirs_ra, b_cirs_dec, EO)
-    call iau_ATCI13(c_icrs_ra, c_icrs_dec, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, & 
-                    2451545.0_dp, t_jd_j2000, c_cirs_ra, c_cirs_dec, EO)
-    call iau_ATCI13(d_icrs_ra, d_icrs_dec, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, & 
-                    2451545.0_dp, t_jd_j2000, d_cirs_ra, d_cirs_dec, EO)
+    call icrs2cirs(t, a_icrs_ra, a_icrs_dec, a_cirs_ra, a_cirs_dec)
+    call icrs2cirs(t, b_icrs_ra, b_icrs_dec, b_cirs_ra, b_cirs_dec)
+    call icrs2cirs(t, c_icrs_ra, c_icrs_dec, c_cirs_ra, c_cirs_dec)
+    call icrs2cirs(t, d_icrs_ra, d_icrs_dec, d_cirs_ra, d_cirs_dec)
     print *, a_cirs_ra, b_cirs_ra, c_cirs_ra, d_cirs_ra
     print *, a_cirs_dec, b_cirs_dec, c_cirs_dec, d_cirs_dec
-    sa_ra = 00.0_dp*(pi/12.0_dp)
-    sb_ra = 06.0_dp*(pi/12.0_dp)
-    sc_ra = 12.0_dp*(pi/12.0_dp)
-    sd_ra = 18.0_dp*(pi/12.0_dp)
+    sa_ra = 00.0_dp
+    sb_ra = 06.0_dp
+    sc_ra = 12.0_dp
+    sd_ra = 18.0_dp
     sa_dec = 0.0_dp
     sb_dec = 0.0_dp
     sc_dec = 0.0_dp
     sd_dec = 0.0_dp
-    call iau_LTECEQ(t_jep, sa_ra, sa_dec, &
-                    sa_icrs_ra, sa_icrs_dec)
-    call iau_LTECEQ(t_jep, sb_ra, sb_dec, &
-                    sb_icrs_ra, sb_icrs_dec)
-    call iau_LTECEQ(t_jep, sc_ra, sc_dec, &
-                    sc_icrs_ra, sc_icrs_dec)
-    call iau_LTECEQ(t_jep, sd_ra, sd_dec, &
-                    sd_icrs_ra, sd_icrs_dec)
-    call iau_ATCI13(sa_icrs_ra, sa_icrs_dec, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
-                    2451545.0_dp, t_jd_j2000, sa_cirs_ra, sa_cirs_dec, EO)
-    call iau_ATCI13(sb_icrs_ra, sb_icrs_dec, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
-                    2451545.0_dp, t_jd_j2000, sb_cirs_ra, sb_cirs_dec, EO)
-    call iau_ATCI13(sc_icrs_ra, sc_icrs_dec, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
-                    2451545.0_dp, t_jd_j2000, sc_cirs_ra, sc_cirs_dec, EO)
-    call iau_ATCI13(sd_icrs_ra, sd_icrs_dec, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
-                    2451545.0_dp, t_jd_j2000, sd_cirs_ra, sd_cirs_dec, EO)
+    call ecli2cirs_lt(t, sa_ra, sa_dec, sa_cirs_ra, sa_cirs_dec)
+    call ecli2cirs_lt(t, sb_ra, sb_dec, sb_cirs_ra, sb_cirs_dec)
+    call ecli2cirs_lt(t, sc_ra, sc_dec, sc_cirs_ra, sc_cirs_dec)
+    call ecli2cirs_lt(t, sd_ra, sd_dec, sd_cirs_ra, sd_cirs_dec)
     print *, sa_cirs_ra, sb_cirs_ra, sc_cirs_ra, sd_cirs_ra
     print *, sa_cirs_dec, sb_cirs_dec, sc_cirs_dec, sd_cirs_dec
-    call iau_ECEQ06(2451545.0_dp, t_jd_j2000, sa_ra, sa_dec, &
-                    sa_icrs_ra, sa_icrs_dec)
-    call iau_ECEQ06(2451545.0_dp, t_jd_j2000, sb_ra, sb_dec, &
-                    sb_icrs_ra, sb_icrs_dec)
-    call iau_ECEQ06(2451545.0_dp, t_jd_j2000, sc_ra, sc_dec, &
-                    sc_icrs_ra, sc_icrs_dec)
-    call iau_ECEQ06(2451545.0_dp, t_jd_j2000, sd_ra, sd_dec, &
-                    sd_icrs_ra, sd_icrs_dec)
-    call iau_ATCI13(sa_icrs_ra, sa_icrs_dec, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
-                    2451545.0_dp, t_jd_j2000, sa_cirs_ra, sa_cirs_dec, EO)
-    call iau_ATCI13(sb_icrs_ra, sb_icrs_dec, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
-                    2451545.0_dp, t_jd_j2000, sb_cirs_ra, sb_cirs_dec, EO)
-    call iau_ATCI13(sc_icrs_ra, sc_icrs_dec, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
-                    2451545.0_dp, t_jd_j2000, sc_cirs_ra, sc_cirs_dec, EO)
-    call iau_ATCI13(sd_icrs_ra, sd_icrs_dec, 0.0_dp, 0.0_dp, 0.0_dp, 0.0_dp, &
-                    2451545.0_dp, t_jd_j2000, sd_cirs_ra, sd_cirs_dec, EO)
+    call ecli2cirs(t, sa_ra, sa_dec, sa_cirs_ra, sa_cirs_dec)
+    call ecli2cirs(t, sb_ra, sb_dec, sb_cirs_ra, sb_cirs_dec)
+    call ecli2cirs(t, sc_ra, sc_dec, sc_cirs_ra, sc_cirs_dec)
+    call ecli2cirs(t, sd_ra, sd_dec, sd_cirs_ra, sd_cirs_dec)
     print *, sa_cirs_ra, sb_cirs_ra, sc_cirs_ra, sd_cirs_ra
     print *, sa_cirs_dec, sb_cirs_dec, sc_cirs_dec, sd_cirs_dec
+
+    theta_2 = +30.0_dp*(pi/18.0_dp)
+    theta_3 = -15.0_dp*(pi/18.0_dp)
+    theta_1 = sa_cirs_ra &
+             -acos((sin(theta_3)-sin(sa_cirs_dec)*sin(theta_2)) &
+                  /(cos(sa_cirs_dec)*cos(theta_2)))
+    x = cos(a_cirs_dec)*cos(a_cirs_ra-theta_1)*sin(theta_2) &
+       -sin(a_cirs_dec)*cos(theta_2)
+    y = cos(a_cirs_dec)*sin(a_cirs_ra-theta_1)
+    print *, atan2(y, x)/180.0_dp*pi
+    theta_1 = sb_cirs_ra &
+             -acos((sin(theta_3)-sin(sb_cirs_dec)*sin(theta_2)) &
+                  /(cos(sb_cirs_dec)*cos(theta_2)))
+    x = cos(b_cirs_dec)*cos(b_cirs_ra-theta_1)*sin(theta_2) &
+       -sin(b_cirs_dec)*cos(theta_2)
+    y = cos(b_cirs_dec)*sin(b_cirs_ra-theta_1)
+    print *, atan2(y, x)/180.0_dp*pi
+    theta_1 = sc_cirs_ra &
+             -acos((sin(theta_3)-sin(sc_cirs_dec)*sin(theta_2)) &
+                  /(cos(sc_cirs_dec)*cos(theta_2)))
+    x = cos(c_cirs_dec)*cos(c_cirs_ra-theta_1)*sin(theta_2) &
+       -sin(c_cirs_dec)*cos(theta_2)
+    y = cos(c_cirs_dec)*sin(c_cirs_ra-theta_1)
+    print *, atan2(y, x)/180.0_dp*pi
+    theta_1 = sd_cirs_ra &
+             -acos((sin(theta_3)-sin(sd_cirs_dec)*sin(theta_2)) &
+                  /(cos(sd_cirs_dec)*cos(theta_2)))
+    x = cos(d_cirs_dec)*cos(d_cirs_ra-theta_1)*sin(theta_2) &
+       -sin(d_cirs_dec)*cos(theta_2)
+    y = cos(d_cirs_dec)*sin(d_cirs_ra-theta_1)
+    print *, atan2(y, x)/180.0_dp*pi
 end program yao
