@@ -69,13 +69,13 @@ subroutine altaz(theta_2, theta_3, sa_ra, sa_dec, a_ra, a_dec, &
     real(dp) :: theta_1
     real(dp) :: x, y, z
     theta_1 = sa_ra &
-             -acos((sin(theta_3)-sin(sa_dec)*sin(theta_2)) &
+             -acos(sin(sa_dec)*sin(theta_2)-(sin(theta_3)) &
                   /(cos(sa_dec)*cos(theta_2)))
-    x = cos(a_dec)*cos(a_ra-theta_1)*sin(theta_2) &
-       -sin(a_dec)*cos(theta_2)
+    x = sin(a_dec)*cos(theta_2) &
+       +cos(a_dec)*cos(a_ra-theta_1)*sin(theta_2)
     y = cos(a_dec)*sin(a_ra-theta_1)
-    z = cos(a_dec)*cos(a_ra-theta_1)*cos(theta_2) &
-       +sin(a_dec)*sin(theta_2)
+    z = sin(a_dec)*sin(theta_2) &
+       -cos(a_dec)*cos(a_ra-theta_1)*cos(theta_2)
     alt_a = atan2(y, x)/pi*180.0_dp
     az_a = asin(z)/pi*180.0_dp
 end subroutine altaz
@@ -133,7 +133,7 @@ program yao
     call ecli2cirs(t, sd_ra, sd_dec, sd_cirs_ra, sd_cirs_dec)
     !print *, sa_cirs_ra, sb_cirs_ra, sc_cirs_ra, sd_cirs_ra
     !print *, sa_cirs_dec, sb_cirs_dec, sc_cirs_dec, sd_cirs_dec
-    theta_2 = +30.0_dp/180.0_dp*pi
+    theta_2 = +35.0_dp/180.0_dp*pi
     theta_3 = -15.0_dp/180.0_dp*pi
     call altaz(theta_2, theta_3, sa_cirs_ra, sa_cirs_dec, &
                a_cirs_ra, a_cirs_dec, alt_a, az_a)
